@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 
@@ -25,20 +26,29 @@ public class WebProxy {
       .baseUrl(url)
       .build();
     WebClient.RequestHeadersUriSpec<?> req = webClient.get();
-    var parametrizedType = new ParameterizedTypeReference<Response<Object>>() {};
-    ResponseEntity<byte[]> rsp = req.retrieve().toEntity(byte[].class).block();
-    if (rsp.getStatusCode() != HttpStatus.OK) {
-      throw new RuntimeException("https status " + rsp.getStatusCode());
-    }
+    ResponseEntity<byte[]> rsp = req.retrieve()
+      .onStatus(HttpStatus::isError, response -> Mono.empty())
+      .toEntity(byte[].class)
+      .block();
     byte[] body = rsp.getBody();
     try {
       JSONObject o = new JSONObject(new String(body, StandardCharsets.ISO_8859_1));
-      if (!o.getString("status").equals("OK")) {
+      if (treatResponseAsError(o)) {
         throw new RuntimeException(o.getString("comment"));
       }
     } catch (JSONException e) {
       throw new RuntimeException(e);
     }
     return body;
+  }
+
+  private boolean treatResponseAsError(JSONObject o) {
+    if (o.getString("status").equals("OK")) {
+      return false;
+    } else if (o.getString("comment").equals("contestId: Rating changes are unavailable for this contest")) {
+      return false;
+    } else {
+      return true;
+    }
   }
 }

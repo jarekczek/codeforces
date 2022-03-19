@@ -26,7 +26,7 @@ public class CfApi {
 
   public Contest getContest(int contestId) {
     var contest = new Contest();
-    contest.standings = contestStandingsApi.get(contestId);
+    //contest.standings = contestStandingsApi.get(contestId);
     contest.ratingChanges = ratingChangesApi.get(contestId);
     return contest;
   }
