@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'org.json:json:20211205'
+  implementation 'org.springframework.boot:spring-boot-starter-webflux:2.6.4'
+}
+
+task run (type:JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'Go'
+  //jvmArgs(["-Dhttp.proxyHost=localhost", "-Dhttp.proxyPort=1090"])
+  //jvmArgs "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=7778"
+}
