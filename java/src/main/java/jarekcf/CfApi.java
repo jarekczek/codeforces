@@ -21,6 +21,7 @@ public class CfApi {
 
   public Contests getContestList() {
     List<Contest> contestList = contestsListApi.get();
+    contestList.sort(Contest::dateComparatorAsc);
     return new Contests(contestList);
   }
 
