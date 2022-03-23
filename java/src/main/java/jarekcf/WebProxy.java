@@ -47,6 +47,8 @@ public class WebProxy {
       return false;
     } else if (o.getString("comment").equals("contestId: Rating changes are unavailable for this contest")) {
       return false;
+    } else if (o.getString("comment").matches("contestId: Contest with id [0-9]+ not found")) {
+      return false;
     } else {
       return true;
     }

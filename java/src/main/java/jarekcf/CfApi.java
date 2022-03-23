@@ -10,6 +10,8 @@ import java.util.List;
 
 @Component
 public class CfApi {
+  private Contests contests;
+
   @Autowired
   ContestsListApi contestsListApi;
 
@@ -20,13 +22,17 @@ public class CfApi {
   ContestRatingChangesApi ratingChangesApi;
 
   public Contests getContestList() {
-    List<Contest> contestList = contestsListApi.get();
-    contestList.sort(Contest::dateComparatorAsc);
-    return new Contests(contestList);
+    if (this.contests == null) {
+      List<Contest> contestList;
+      contestList = contestsListApi.get();
+      contestList.sort(Contest::dateComparatorAsc);
+      this.contests = new Contests(contestList);
+    }
+    return contests;
   }
 
   public Contest getContest(int contestId) {
-    var contest = new Contest();
+    Contest contest = this.contests.get(contestId);
     //contest.standings = contestStandingsApi.get(contestId);
     contest.ratingChanges = ratingChangesApi.get(contestId);
     return contest;

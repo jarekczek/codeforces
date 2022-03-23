@@ -11,7 +11,7 @@ dependencies {
 
 task run (type:JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
-  main = 'Go'
+  main = 'jarekcf.Go'
   //jvmArgs(["-Dhttp.proxyHost=localhost", "-Dhttp.proxyPort=1090"])
   //jvmArgs "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=7778"
 }
