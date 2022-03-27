@@ -7,40 +7,64 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class EloRatingSystem implements RatingSystem {
   private static final Logger log = LoggerFactory.getLogger(EloRatingSystem.class);
 
+  private int startRating = 0;
   private Map<String, Rating> ratingsMap = new HashMap<>();
+
+  public EloRatingSystem() {
+    this(0);
+  }
+
+  public EloRatingSystem(int startRating) {
+    this.startRating = startRating;
+  }
 
   @Override
   public void addResults(List<Result> results) {
-    results.forEach(result -> ratingsMap.computeIfAbsent(result.handle, (key) -> new Rating(key)));
     ratingsMap.values().forEach(Rating::resetNew);
+    results.forEach(result -> ratingsMap.computeIfAbsent(result.handle, (key) -> new Rating(key, startRating)));
 
     for (int i = 0; i < results.size(); i++) {
       for (int j = i + 1; j < results.size(); j++) {
-        double delta = calcRatingChange(results.get(i), results.get(j));
-        ratingsMap.get(results.get(i).handle).addRating(delta);
-        ratingsMap.get(results.get(j).handle).addRating(-delta);
+        double delta = calcRatingChange(results.get(i), results.get(j), 277d / results.size());
+        ratingsMap.get(results.get(i).handle).addRatingToNew(delta);
+        ratingsMap.get(results.get(j).handle).addRatingToNew(-delta);
       }
+    }
+
+    calcPerformance(results);
+  }
+
+  private void calcPerformance(List<Result> results) {
+    double avg = results.stream()
+      .mapToDouble((result) -> ratingsMap.get(result.handle).oldRating)
+      .average().getAsDouble();
+    List<Result> sorted = results.stream().sorted(Result::rankComparatorAsc).collect(Collectors.toUnmodifiableList());
+    for (Result result : sorted) {
+      int looses = result.rank1 - 1;
+      int wins = results.size() - result.rank2;
+      ratingsMap.get(result.handle).performance = avg + 400d * (wins - looses) / results.size();
     }
   }
 
-  private double calcRatingChange(Result result1, Result result2) {
+  private double calcRatingChange(Result result1, Result result2, double k) {
     double result = calcDoubleResult(result1, result2);
     double expectedResult = calcExpectedResult(result1, result2);
     log.debug("result " + result1 + " vs " + result2 + ": " + result + " (" + expectedResult + ")");
-    return 16d * (result - expectedResult);
+    return k * (result - expectedResult);
   }
 
   private double calcExpectedResult(Result result1, Result result2) {
-    double rdiff400 = (getRating(result2) - getRating(result1)) / 400d;
+    double rdiff400 = (getOldRating(result2) - getOldRating(result1)) / 400d;
     double denom = 1d + Math.pow(10, rdiff400);
     return 1d / denom;
   }
 
-  private double getRating(Result result) {
+  private double getOldRating(Result result) {
     return ratingsMap.get(result.handle).oldRating;
   }
 
@@ -66,7 +90,23 @@ public class EloRatingSystem implements RatingSystem {
   }
 
   @Override
-  public double getRating(String handle) {
-    return ratingsMap.get(handle).newRating;
+  public Rating getRating(String handle) {
+    return ratingsMap.get(handle);
   }
+
+  @Override
+  public void addRating(String handle, int newRating) {
+    ratingsMap.compute(handle, (key, oldRating) -> {
+      if (oldRating == null) {
+        Rating rating = new Rating(key, newRating);
+        rating.setActive(true);
+        return rating;
+      } else {
+        oldRating.oldRating = newRating;
+        oldRating.newRating = newRating;
+        return oldRating;
+      }
+    });
+  }
+
 }

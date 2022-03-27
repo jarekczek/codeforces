@@ -1,6 +1,11 @@
 package jarekcf;
 
 import jarekcf.dto.ContestDto;
+import jarekcf.rating.EloRatingSystem;
+import jarekcf.rating.Rating;
+import jarekcf.rating.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -11,12 +16,15 @@ import org.springframework.core.env.Environment;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SpringBootApplication
 @EnableCaching
 public class Go implements CommandLineRunner {
+  private static final Logger log = LoggerFactory.getLogger(Go.class);
+
   @Autowired
   ApplicationContext applicationContext;
 
@@ -42,15 +50,69 @@ public class Go implements CommandLineRunner {
       .filter(contest -> contest.name.contains("Div. 2"))
       .filter(contest -> contest.getDate().isAfter(LocalDate.parse("2020-01-31")))
       .filter(contest -> contest.getDate().isBefore(LocalDate.parse("2020-07-31")))
+      .filter((contest) -> false)
       .forEach(contest -> {
         System.out.println(contest.getDate() + " " + contest.name);
         Contest full = cfApi.getContest(contest.id);
         System.out.println(full.ratingChanges.stream().mapToInt(chg -> chg.newRating).min());
       });
 
-    gatherUserStats(contests);
+    //gatherUserStats(contests);
+    elo(contests);
 
     System.exit(0);
+  }
+
+  private void elo(Contests contests) {
+    var system = new EloRatingSystem(1500);
+    int iContest = 1;
+    for (int i = 0; i < iContest; i++) {
+      System.out.println("added calculated results from " + contests.getList().get(i).name);
+      addCalculatedResults(system, cfApi.getContest(contests.getList().get(i).id));
+    }
+    Contest contest = cfApi.getContest(contests.getList().get(iContest).id);
+    system.addResults(cfContestToResults(contest));
+    for (RatingChange chg : contest.ratingChanges) {
+      Rating rating = system.getRating(chg.handle);
+      log.debug("{} {} -> {}, u mnie {} ->", chg.handle, chg.oldRating, chg.newRating,
+        rating);
+    }
+  }
+
+  private void addCalculatedResults(EloRatingSystem system, Contest contest) {
+    for (RatingChange chg : contest.ratingChanges) {
+      system.addRating(chg.handle, chg.newRating);
+    }
+  }
+
+  private List<Result> cfContestToResults(Contest contest) {
+    int iSameRankStart = -1;
+    int prevRank = -1;
+    var results = new ArrayList<Result>();
+    for (int i = 0; i < contest.ratingChanges.size(); i++) {
+      RatingChange chg = contest.ratingChanges.get(i);
+      int nextRank = i == contest.ratingChanges.size() - 1 ? Integer.MAX_VALUE : contest.ratingChanges.get(i + 1).rank;
+      if (chg.rank != prevRank && chg.rank != nextRank) {
+        results.add(new Result(chg.handle, chg.rank));
+      } else if (chg.rank != prevRank && chg.rank == nextRank) {
+        // This is the beginning of the draw.
+        iSameRankStart = i;
+      } else if (chg.rank == prevRank && chg.rank == nextRank) {
+        // We are inside a draw, wait until last drawn player.
+      } else if ((chg.rank == prevRank && chg.rank != nextRank) || i == contest.ratingChanges.size() - 1) {
+        // Last row of a draw, add results of all the drawn players.
+        int iSameRankEnd = i;
+        int rankStart = contest.ratingChanges.get(iSameRankStart).rank;
+        int rankEnd = chg.rank;
+        for (int j = iSameRankStart; j <= iSameRankEnd; j++) {
+          RatingChange chgJ = contest.ratingChanges.get(j);
+          results.add(new Result(chgJ.handle, rankStart, rankEnd));
+        }
+      }
+      prevRank = chg.rank;
+    }
+
+    return results;
   }
 
   private void gatherUserStats(Contests contests) {

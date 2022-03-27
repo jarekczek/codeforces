@@ -20,4 +20,8 @@ public class Result {
   public String toString() {
     return this.handle + " [" + this.rank1 + ", " + this.rank2 + "]";
   }
+
+  public static int rankComparatorAsc(Result r1, Result r2) {
+    return ((Integer)r1.rank1).compareTo(r2.rank1);
+  }
 }

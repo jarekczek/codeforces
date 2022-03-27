@@ -39,7 +39,7 @@ class EloRatingSystemTest {
   @Test
   void test2W1L10ChancesWithDraw() {
     runSystem2PlayersWithRepetitionsAndRatio(20, 1, 10, 0);
-    Assertions.assertThat(system.getRating("B") - system.getRating("A"))
+    Assertions.assertThat(system.getNewRating("B") - system.getNewRating("A"))
       .isEqualTo(400d, Offset.offset(10d));
   }
 
@@ -53,8 +53,8 @@ class EloRatingSystemTest {
       system.addResults(Arrays.asList(new Result("A", 3, 3), new Result("B1", 1, 2), new Result("B2", 1, 2)));
       system.getRatings().forEach(rating -> log.debug(rating.toString()));
     }
-    Assertions.assertThat(system.getRating("A") - system.getRating("B1")).isEqualTo(120d, Offset.offset(10d));
-    Assertions.assertThat(system.getRating("B1")).isEqualTo(system.getRating("B2"), Offset.offset(10d));
+    Assertions.assertThat(system.getNewRating("A") - system.getNewRating("B1")).isEqualTo(120d, Offset.offset(20d));
+    Assertions.assertThat(system.getNewRating("B1")).isEqualTo(system.getNewRating("B2"), Offset.offset(10d));
   }
 
   void runSystem2PlayersWithRepetitionsAndRatio(int repetitions, int timesWin, int timesLoose, int timesDraw) {
