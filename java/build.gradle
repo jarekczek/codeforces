@@ -7,6 +7,9 @@ repositories {
 dependencies {
   implementation 'org.json:json:20211205'
   implementation 'org.springframework.boot:spring-boot-starter-webflux:2.6.4'
+
+  testImplementation 'org.assertj:assertj-core:3.22'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
 }
 
 task run (type:JavaExec) {

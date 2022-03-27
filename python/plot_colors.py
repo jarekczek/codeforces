@@ -3,7 +3,8 @@ import dateutil.parser
 import matplotlib.pyplot as plt
 import pandas as pd
 
-df = pd.read_csv('colors_2010_2022.txt', delimiter="\t")
+df = pd.read_csv('colors_2010_2022_6.txt', delimiter="\t")
+df = df[df['reportDate'] >= '2018']
 print(df.head())
 #df = df.set_index('reportDate')
 dates = sorted(df['reportDate'].unique())
@@ -35,7 +36,7 @@ df2['dateNumber'] = df2.apply(lambda row: dateToNumber(row.name), axis=1)
 print(df2.head())
   
 plt.clf()
-plt.plot(df2['dateNumber'], df2['total'])
+plt.plot(df2['dateNumber'], df2['total'], linestyle='dotted', color='black', markevery=1)
 plt.plot(df2['dateNumber'], df2['0000_gray'], color='#808080')
 plt.plot(df2['dateNumber'], df2['1200_green'], color='#008000')
 plt.plot(df2['dateNumber'], df2['1400_cyan'], color='#03a89e')

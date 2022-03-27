@@ -39,8 +39,14 @@ public class Go implements CommandLineRunner {
     System.out.println(contests.get(1647).type);
     contests.getList().stream()
       .filter(contest -> contest.phase.equals(ContestDto.Phase.FINISHED))
-      .filter(contest -> contest.getDate().isAfter(LocalDate.now().minusDays(20)))
-      .forEach(contest -> System.out.println(contest.getDate() + " " + contest.name));
+      .filter(contest -> contest.name.contains("Div. 2"))
+      .filter(contest -> contest.getDate().isAfter(LocalDate.parse("2020-01-31")))
+      .filter(contest -> contest.getDate().isBefore(LocalDate.parse("2020-07-31")))
+      .forEach(contest -> {
+        System.out.println(contest.getDate() + " " + contest.name);
+        Contest full = cfApi.getContest(contest.id);
+        System.out.println(full.ratingChanges.stream().mapToInt(chg -> chg.newRating).min());
+      });
 
     gatherUserStats(contests);
 

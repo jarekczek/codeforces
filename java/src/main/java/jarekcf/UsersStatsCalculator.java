@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class UsersStatsCalculator {
-  public static final int MINIMUM_CONTESTS = 1;
+  public static final int MINIMUM_CONTESTS = 6;
   public static final int MAX_INACTIVE_MONTHS = 6;
 
   private Map<String, TopUserInfo> userMap = new HashMap<>();
