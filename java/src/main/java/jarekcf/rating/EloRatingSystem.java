@@ -25,6 +25,8 @@ public class EloRatingSystem implements RatingSystem {
   public void addResults(List<Result> results) {
     ratingsMap.values().forEach(Rating::resetNew);
     addNewUsersToRatings(results);
+    long resultsNonProvisionalCount = results.stream()
+      .filter(result -> !ratingsMap.get(result.handle).isProvisional()).count();
 
     for (int i = 0; i < results.size(); i++) {
       if (ratingsMap.get(results.get(i).handle).isProvisional()) {
@@ -34,7 +36,7 @@ public class EloRatingSystem implements RatingSystem {
         if (ratingsMap.get(results.get(j).handle).isProvisional()) {
           continue;
         }
-        double delta = calcRatingChange(results.get(i), results.get(j), deltaFactor / results.size());
+        double delta = calcRatingChange(results.get(i), results.get(j), deltaFactor / resultsNonProvisionalCount);
         ratingsMap.get(results.get(i).handle).addRatingToNew(delta);
         ratingsMap.get(results.get(j).handle).addRatingToNew(-delta);
       }

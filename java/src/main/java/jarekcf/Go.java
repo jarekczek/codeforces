@@ -2,6 +2,7 @@ package jarekcf;
 
 import jarekcf.dto.ContestDto;
 import jarekcf.rating.EloRatingSystem;
+import jarekcf.rating.EloRatingSystemNonProvisional;
 import jarekcf.rating.Rating;
 import jarekcf.rating.Result;
 import org.slf4j.Logger;
