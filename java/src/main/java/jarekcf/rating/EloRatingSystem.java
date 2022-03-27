@@ -12,31 +12,42 @@ import java.util.stream.Collectors;
 public class EloRatingSystem implements RatingSystem {
   private static final Logger log = LoggerFactory.getLogger(EloRatingSystem.class);
 
-  private int startRating = 0;
-  private Map<String, Rating> ratingsMap = new HashMap<>();
+  protected int startRating = 0;
+  protected final Map<String, Rating> ratingsMap = new HashMap<>();
+  private double deltaFactor;
 
-  public EloRatingSystem() {
-    this(0);
-  }
-
-  public EloRatingSystem(int startRating) {
+  public EloRatingSystem(int startRating, double deltaFactor) {
     this.startRating = startRating;
+    this.deltaFactor = deltaFactor;
   }
 
   @Override
   public void addResults(List<Result> results) {
     ratingsMap.values().forEach(Rating::resetNew);
-    results.forEach(result -> ratingsMap.computeIfAbsent(result.handle, (key) -> new Rating(key, startRating)));
+    addNewUsersToRatings(results);
 
     for (int i = 0; i < results.size(); i++) {
+      if (ratingsMap.get(results.get(i).handle).isProvisional()) {
+        continue;
+      }
       for (int j = i + 1; j < results.size(); j++) {
-        double delta = calcRatingChange(results.get(i), results.get(j), 277d / results.size());
+        if (ratingsMap.get(results.get(j).handle).isProvisional()) {
+          continue;
+        }
+        double delta = calcRatingChange(results.get(i), results.get(j), deltaFactor / results.size());
         ratingsMap.get(results.get(i).handle).addRatingToNew(delta);
         ratingsMap.get(results.get(j).handle).addRatingToNew(-delta);
       }
     }
 
     calcPerformance(results);
+  }
+
+  protected void addNewUsersToRatings(List<Result> results) {
+    results.forEach(result -> ratingsMap.computeIfAbsent(result.handle, (key) -> {
+      Rating rating = new Rating(key, startRating);
+      return rating;
+    }));
   }
 
   private void calcPerformance(List<Result> results) {
@@ -83,8 +94,7 @@ public class EloRatingSystem implements RatingSystem {
 
   @Override
   public List<Rating> getRatings() {
-    var list = new ArrayList<Rating>();
-    list.addAll(ratingsMap.values());
+    var list = new ArrayList<>(ratingsMap.values());
     list.sort(Rating::ratingComparatorDesc);
     return list;
   }

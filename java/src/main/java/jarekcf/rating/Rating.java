@@ -33,7 +33,7 @@ public class Rating {
 
   @Override
   public String toString() {
-    return handle + " " + (int)oldRating + " -> " + (int)newRating + " p" + (int)performance;
+    return handle + " " + (int)oldRating + " -> " + (int)newRating;
   }
 
   public static int ratingComparatorDesc(Rating r1, Rating r2) {

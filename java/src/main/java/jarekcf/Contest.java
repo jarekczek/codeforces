@@ -29,4 +29,9 @@ public class Contest extends ContestDto {
       return Integer.compare(contest1.id, contest2.id);
     }
   }
+
+  @Override
+  public String toString() {
+    return name + " (id " + id + ")";
+  }
 }

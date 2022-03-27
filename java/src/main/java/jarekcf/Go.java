@@ -64,18 +64,25 @@ public class Go implements CommandLineRunner {
   }
 
   private void elo(Contests contests) {
-    var system = new EloRatingSystem(1500);
-    int iContest = 1;
-    for (int i = 0; i < iContest; i++) {
-      System.out.println("added calculated results from " + contests.getList().get(i).name);
+    var system = new EloRatingSystem(1500, 277d);
+    int iContest1 = 1;
+    int iContest2 = 10;
+    for (int i = 0; i < iContest1; i++) {
+      System.out.println("added calculated results from " + contests.getList().get(i));
       addCalculatedResults(system, cfApi.getContest(contests.getList().get(i).id));
     }
-    Contest contest = cfApi.getContest(contests.getList().get(iContest).id);
-    system.addResults(cfContestToResults(contest));
-    for (RatingChange chg : contest.ratingChanges) {
-      Rating rating = system.getRating(chg.handle);
-      log.debug("{} {} -> {}, u mnie {} ->", chg.handle, chg.oldRating, chg.newRating,
-        rating);
+    for (int i = iContest1; i <= iContest2; i++) {
+      Contest contest = cfApi.getContest(contests.getList().get(i).id);
+      system.addResults(cfContestToResults(contest));
+      System.out.println("added results from " + contest);
+      for (RatingChange chg : contest.ratingChanges) {
+        Rating rating = system.getRating(chg.handle);
+        if (rating.isProvisional()) {
+          continue;
+        }
+        log.debug("{} {} -> {}, u mnie {}", chg.handle, chg.oldRating, chg.newRating,
+          rating);
+      }
     }
   }
 

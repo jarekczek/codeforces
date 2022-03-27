@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
-class EloRatingSystemTest {
-  public static final Logger log = LoggerFactory.getLogger(EloRatingSystemTest.class);
+class EloRatingSystemNonProvisionalTest {
+  public static final Logger log = LoggerFactory.getLogger(EloRatingSystemNonProvisionalTest.class);
   private RatingSystem system;
 
   @BeforeEach
   public void beforeEach() {
-    system = new EloRatingSystem();
+    system = new EloRatingSystemNonProvisional(0, 30d);
   }
 
   @Test
@@ -37,7 +37,7 @@ class EloRatingSystemTest {
   }
 
   @Test
-  void test2W1L10ChancesWithDraw() {
+  void test2W1L10Chances() {
     runSystem2PlayersWithRepetitionsAndRatio(20, 1, 10, 0);
     Assertions.assertThat(system.getNewRating("B") - system.getNewRating("A"))
       .isEqualTo(400d, Offset.offset(10d));
